@@ -5,7 +5,7 @@ from getpass import getpass
 from time import sleep
 from base_site import BaseJobSite
 from selenium import webdriver
-from selenium.common.exceptions import NoSuchElementException
+from selenium.common.exceptions import NoSuchElementException, NoAlertPresentException
 
 class PlacePro(BaseJobSite):
 
@@ -66,16 +66,17 @@ class PlacePro(BaseJobSite):
 
     def search_for_computer_science_jobs(self,
                                          keyword=None):
+        # Term is a school term
         term_of_interest = self.browser.find_element_by_css_selector(
             "select[id='ctl00_conHF_ppcboEmpType_cbo'] option[value='1;2;2014;0']")
         term_of_interest.click()
 
-        # # Choose to include only computer science jobs
+        # Choose to include only computer science jobs
         cpsc_jobs_checkbox = self.browser.find_element_by_id(
             r"ctl00_conHF_pplstMajors_lst_15")
         cpsc_jobs_checkbox.click()
 
-        # Select the "You have not made a selection" button
+        # Select the "You have not made a selection" button2
         selection_button = self.browser.find_element_by_css_selector(
             r"select[id='ctl00_conHF_ppcboApply_cbo'] option[value='-3']")
         selection_button.click()
@@ -91,10 +92,22 @@ class PlacePro(BaseJobSite):
             keyword_input.clear()
             keyword_input.send_keys(keyword)
 
+            # Set a class variable flag that indicates whether we are searching for a keyword
+            self.keyword_flag = True
+        else:
+            self.keyword_flag = False
+
         search_button = self.browser.find_element_by_css_selector(
             r"input[name='ctl00$conHF$cmdQuickSearch']")
+
         search_button.click()
 
+        # Do some work to handle the popup
+        try:
+            alert = self.browser.switch_to_alert()
+            alert.accept()
+        except NoAlertPresentException:
+            pass
 
     def go_through_all_job_pages(self, function_for_page=None):
         """ Navigates through all the possible job sea
@@ -135,14 +148,14 @@ class PlacePro(BaseJobSite):
         job_description = self.browser.find_element_by_css_selector(
             "div[class='ToolBoxInner'] div[class='JobDescrip']").text
 
-        job_information = { "Id": placepro_id,
-                            "Posting_title": posting_title,
-                            "Company_name": company_name,
-                            "URL": url,
-                            "Location": location,
-                            "Resume_deadline": resume_deadline,
-                            "Job_description": job_description,
-                            "Contains_keyword": False,
+        job_information = { "id": placepro_id,
+                            "posting_title": posting_title,
+                            "company_name": company_name,
+                            "url": url,
+                            "location": location,
+                            "resume_deadline": resume_deadline,
+                            "job_description": job_description,
+                            "contains_keyword": self.keyword_flag,
                             }
         return job_information
 

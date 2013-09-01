@@ -5,12 +5,13 @@ import config
 import time
 
 def placepro_runner(
+    login_credentials=None,
     browser=None,
     keywords=None):
 
     if not browser:
         browser = webdriver.Chrome()
-    placepro_browser = placepro.PlacePro(browser=browser)
+    placepro_browser = placepro.PlacePro(browser=browser, login_credentials=login_credentials)
 
     # If we dont specify any keywords, just take in a list with a None
     # so it searches once without any keywords
@@ -54,4 +55,4 @@ def talentegg_runner():
 
 keywords = config.keywords
 # talentegg_runner()
-placepro_runner(keywords=keywords)
+placepro_runner(keywords=keywords, login_credentials=config.placepro_login)
