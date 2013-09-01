@@ -9,13 +9,16 @@ import config
 
 class DataHandler(object):
 
-    table_schemas_file_name = "table_schemas.sql"
+    table_schemas_file_name = os.path.join(os.path.dirname(os.path.abspath(__file__)), "table_schemas.sql")
 
-    sql_statement_placepro = "INSERT INTO placepro VALUES(?,?,?,?,?,?,?,?)",
+    sql_statement_placepro = "INSERT INTO placepro VALUES(?,?,?,?,?,?,?,?,?)"
 
     def __init__(self):
         self.connection = sqlite3.connect(config.path_to_db)
         self.__create_tables_if_not_already_exists()
+
+    def insert_placepro_adapter(self, placepro, *args):
+        self.insert_place_pro(placepro)
 
     def insert_place_pro(self, placepro):
         """
@@ -28,14 +31,17 @@ class DataHandler(object):
             raise ValueError("Invalid argument: placepro has to be a dict or tuple in the appropriate format")
 
         cursor = self.connection.cursor()
-
-        cursor.execute(self.sql_statement_placepro, placepro)
-
+        try:
+            cursor.execute(self.sql_statement_placepro, placepro)
+            self.connection.commit()
+        except sqlite3.IntegrityError:
+            pass
 
     def insert_many_place_pro(self, many_placepro):
         """
         :param many_placepro: list of valid placepro dictionary or tuple
         """
+
         # Convert all placepros to tuple if not already
         placepro = []
         for pp in many_placepro:
@@ -48,22 +54,22 @@ class DataHandler(object):
         if placepro.count() != 0:
             cursor = self.connection.cursor()
             cursor.executemany(self.sql_statement_placepro,placepro)
-
-    def close_connection():
-        self.connection.close()
+            self.connection.commit()
 
     def __convert_placepro_dict_to_tuple(self, placepro_dict):
         placepro_tuple = (
-            placepro["id"],
-            placepro["posting_title"],
-            placepro["company_name"],
-            placepro["url"],
-            placepro["location"],
-            placepro["resume_deadline"],
-            placepro["job_description"],
-            placepro["contains_keyword"])
+            placepro_dict["id"],
+            placepro_dict["posting_title"],
+            placepro_dict["company_name"],
+            placepro_dict["url"],
+            placepro_dict["location"],
+            placepro_dict["resume_deadline"],
+            placepro_dict["job_description"],
+            placepro_dict["contains_keyword"],
+            False,)
 
         return placepro_tuple
+
 
     def __create_tables_if_not_already_exists(self):
         connection = sqlite3.connect(config.path_to_db)
@@ -71,7 +77,6 @@ class DataHandler(object):
 
         with open(self.table_schemas_file_name, "rb") as sql:
             table_schema = sql.read()
-            print table_schema
             cursor.executescript(table_schema)
 
         connection.commit()
