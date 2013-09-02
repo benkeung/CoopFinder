@@ -11,33 +11,34 @@ class DataHandler(object):
 
     table_schemas_file_name = os.path.join(os.path.dirname(os.path.abspath(__file__)), "table_schemas.sql")
 
-    base_sql_statement_placepro = "INSERT or %s INTO placepro VALUES(?,?,?,?,?,?,?,?,?)"
+    sql_statement_placepro = "INSERT or IGNORE INTO placepro VALUES(?,?,?,?,?,?,?,?,?)"
 
     def __init__(self):
         self.connection = sqlite3.connect(config.path_to_db)
         self.__create_tables_if_not_already_exists()
 
-    def insert_placepro_adapter_overwrite(self, placepro):
-        """ Overwrites the existing table if it exists.
-        
-        NOTE: The reason we need to have a separate method and not just use the insert_placepro with a flag,
-        is that it added extra complexities in how it interacted with the placepro selenium scraper
-        """
-        self.insert_placepro(placepro, True)
+    def insert_placepro_adapter_overwrite_keyword_flag(self, placepro):
+        placepro_id = placepro["id"]
 
-    def insert_placepro_adapter_no_overwrite(self, placepro):
-        """ Does NOT Overwrite the existing table if it exists.
-        
-        NOTE: The reason we need to have a separate method and not just use the insert_placepro with a flag,
-        is that it added extra complexities in how it interacted with the placepro selenium scraper
-        """
-        self.insert_placepro(placepro, False)
+        cursor = self.connection.cursor()
 
-    def insert_placepro(self, placepro, overwrite=False):
+        # If the data for placepro already exist, then we just update the keyword flag
+        if self.__is_placepro_exist(placepro_id):
+            cursor.execute("UPDATE placepro set contains_keyword = 1 where id = ?", (placepro_id,))
+
+        # Else, we need to completely add new data to it
+        else:
+            self.insert_placepro(placepro)
+
+        self.connection.commit()
+
+    def insert_placepro_adapter(self, placepro):
+        self.insert_placepro(placepro)
+
+    def insert_placepro(self, placepro):
         """
         :param placepro: dictionary format of placepro information as defined in placepro.py
         """
-        sql_statement_placepro = self.__create_full_placepro_sql_statement(overwrite)
 
         if isinstance(placepro, dict):
             placepro = self.__convert_placepro_dict_to_tuple(placepro)
@@ -45,15 +46,14 @@ class DataHandler(object):
             raise ValueError("Invalid argument: placepro has to be a dict or tuple in the appropriate format")
 
         cursor = self.connection.cursor()
-        cursor.execute(sql_statement_placepro, placepro)
+        cursor.execute(self.sql_statement_placepro, placepro)
 
         self.connection.commit()
 
-    def insert_many_placepro(self, many_placepro, overwrite=False):
+    def insert_many_placepro(self, many_placepro):
         """
         :param many_placepro: list of valid placepro dictionary or tuple
         """
-        sql_statement_placepro = self.__create_full_placepro_sql_statement(overwrite)
 
         # Convert all placepros to tuple if not already
         placepro = []
@@ -66,7 +66,7 @@ class DataHandler(object):
 
         if placepro.count() != 0:
             cursor = self.connection.cursor()
-            cursor.executemany(sql_statement_placepro,placepro)
+            cursor.executemany(self.sql_statement_placepro,placepro)
             self.connection.commit()
 
     def set_in_calendar(self, placepro_id, in_calendar=1):
@@ -108,6 +108,14 @@ class DataHandler(object):
     def close_connection(self):
         self.connection.close()
 
+    def __is_placepro_exist(self, placepro_id):
+        cursor = self.connection.cursor()
+        result = cursor.execute("SELECT * from placepro where id = ?", (placepro_id,))
+
+        if result:
+            return True
+        return False
+
     def __convert_placepro_dict_to_tuple(self, placepro_dict):
         placepro_tuple = (
             placepro_dict["id"],
@@ -132,7 +140,4 @@ class DataHandler(object):
 
         connection.commit()
 
-    def __create_full_placepro_sql_statement(self, overwrite):
-        if overwrite:
-            return self.base_sql_statement_placepro % "REPLACE"
-        return self.base_sql_statement_placepro % "IGNORE"
+

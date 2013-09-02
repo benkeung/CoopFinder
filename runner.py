@@ -29,10 +29,10 @@ def placepro_runner():
             # event has a keyword, we should override it in case it's not already keyword-tagged
             if keyword:
                 placepro_browser.go_through_all_job_pages(
-                    function_for_page=datahandler.insert_placepro_adapter_overwrite)
+                    function_for_page=datahandler.insert_placepro_adapter_overwrite_keyword_flag)
             else:
                 placepro_browser.go_through_all_job_pages(
-                    function_for_page=datahandler.insert_placepro_adapter_no_overwrite)
+                    function_for_page=datahandler.insert_placepro_adapter)
 
     finally:
         datahandler.connection.close()
