@@ -53,7 +53,29 @@ class GoogleCalender(object):
 
         return service
 
+
 class CalendarDataAdapter(object):
 
     def __init__(self):
         pass
+
+    def convert_sql_tuple_to_json(self, sql_tuple):
+        """
+        :param sql_tuple: is the tuple data returned from querying the 'placepro' table        
+        """
+
+
+
+    def __create_basic_json(self, event_date):
+        """
+        :param event_date: date format in yyyy-mm-dd
+        """
+        event_date = str(event_date)
+        json_cal = dict()
+        
+        # We can use the same for both start and end dates because they are going to be all day events
+        # and have the same format
+        date_dict = { "date" : event_date }
+
+        return { "start" : date_dict, "end" : date_dict }
+
