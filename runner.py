@@ -24,14 +24,22 @@ def placepro_runner():
 
             placepro_browser.navigate_to_job_search()
             placepro_browser.search_for_computer_science_jobs(keyword=keyword)
-            placepro_browser.go_through_all_job_pages(function_for_page=datahandler.insert_placepro_adapter)
+
+            # We want keyworded events to always take precedence. So whenever we see that an
+            # event has a keyword, we should override it in case it's not already keyword-tagged
+            if keyword:
+                placepro_browser.go_through_all_job_pages(
+                    function_for_page=datahandler.insert_placepro_adapter_overwrite)
+            else:
+                placepro_browser.go_through_all_job_pages(
+                    function_for_page=datahandler.insert_placepro_adapter_no_overwrite)
 
     finally:
         datahandler.connection.close()
         placepro_browser.browser.close()
 
 def placepro_data_runner():
-    # Init the three objects we really need
+    # named gcal2 because gcal is a module that's already being imported in
     gcal2 = gcal.GoogleCalender()
     adapter = gcal.PlaceProSqlToJsonAdapter()
 
@@ -44,12 +52,11 @@ def placepro_data_runner():
 
             if not sql_handler.is_in_calendar(placepro_id):
                 placepro_js = adapter.convert_sql_tuple_to_json(placepro_tuple, False)
-                print placepro_js
 
                 gcal2.create_event(placepro_js, config.placepro_coop_cal_id)
                 sql_handler.set_in_calendar(placepro_id, in_calendar=1)
     finally:
         sql_handler.close_connection()
 
-# placepro_runner()
+placepro_runner()
 placepro_data_runner()

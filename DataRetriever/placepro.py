@@ -177,7 +177,7 @@ class PlacePro(BaseJobSite):
                 print "End of flipping through the navigation of pages."
                 break
 
-    def __goto_individual_job_pages(self, function_for_page, *args):
+    def __goto_individual_job_pages(self, function_for_page):
         job_links = self.browser.find_elements_by_css_selector(
             "a.BlueLinkLG")
         job_names = [job_link_element.text for job_link_element in job_links]
@@ -192,5 +192,5 @@ class PlacePro(BaseJobSite):
 
             job_link.click()
             posting = self.page_parse_to_dictionary(placepro_id=placepro_id)
-            function_for_page(posting, args)
+            function_for_page(posting)
             self.browser.back()
