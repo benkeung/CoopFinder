@@ -7,7 +7,8 @@ An automation project to help me find a coop job?
 =============
 Why?
 =============
-Why? Because browsing through job sites takes too much work; open browser, select the appropriate search filters, browser through jobs.
+Because browsing through job sites takes too much work; open browser, select the appropriate search filters, browser through jobs.
+
 ==============
 What this does?
 ==============
