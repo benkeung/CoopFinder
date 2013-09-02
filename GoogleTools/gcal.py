@@ -11,6 +11,7 @@ import httplib2
 import json
 import re
 
+from collections import OrderedDict
 from apiclient.discovery import build
 from oauth2client.file import Storage
 from oauth2client.client import OAuth2WebServerFlow
@@ -25,11 +26,14 @@ class GoogleCalender(object):
     def __init__(self):
         self.service = self.__build_service()
 
-    def list_events(self):
-        events = self.service.events().list(calendarId="benkeungg@gmail.com").execute()
+    def list_events(self, calid=config.default_cal_id):
+        events = self.service.events().list(calendarId=calid).execute()
+        return events
 
-    def create_event(self, calid, event):
-        rec_event = self.service.events().insert(calendarId=calid, body=event).execute()
+    def create_event(self, event, calid=config.default_cal_id):
+        # event is a dictionary
+        response = self.service.events().insert(calendarId=calid, body=event).execute()
+        return response
 
     def __build_service(self):
         """ Creates the service object and based on the credentials stored in
@@ -57,7 +61,6 @@ class GoogleCalender(object):
 
         return service
 
-
 class PlaceProSqlToJsonAdapter(object):
 
     id_index = 0
@@ -69,14 +72,14 @@ class PlaceProSqlToJsonAdapter(object):
     job_description_index = 6
     contains_keyword_index = 7
 
-    keyword_color = "ff7537"
-    no_keyword_color = "fad165"
+    keyword_color = "5"
+    no_keyword_color = "12"
 
     def __init__(self):
         pass
 
     def convert_sql_tuple_to_json(self, sql_tuple,
-        to_json=True):
+        to_json=False):
         """
         :param sql_tuple: is the tuple data returned from querying the 'placepro' table        
         """
@@ -127,23 +130,10 @@ class PlaceProSqlToJsonAdapter(object):
         :param event_date: date format in yyyy-mm-dd
         """
         event_date = str(event_date)
-        json_cal = dict()
         
         # We can use the same for both start and end dates because they are going to be all day events
         # and have the same format
         date_dict = { "date" : event_date }
+        js_dict = OrderedDict([("start", date_dict), ("end", date_dict)])
 
-        return { "start" : date_dict, "end" : date_dict }
-
-# a = (389328,
-#  u'W14 IBM Co-op General Posting 389328 Online',
-#  u'IBM Canada Ltd.',
-#  u'www.ibm.com',
-#  u'Canada - BC - Vancouver Island',
-#  u'Sep 30, 2013',
-#  u"Please apply on the IBM website AND PlacePro with all the required documents.\n\nCompany: IBM Canada\nLength: 4, 8, 12, 16 months\nApply online via this website: https://jobs3.netmedia1.com/cp/faces/job_search\n=====================\n\nYou're ambitious. You've got a passion for business.\n\nYou want to work for a company where you're challenged on a daily basis and where you'll get genuine responsibility from day one.\n\nMaybe you want to develop cool technologies and software?\nMaybe you want to leverage your degree or diploma and apply it to the world of business?\nMaybe you want to work for a company that allows you to give something back to the community?\n\nWhatever you want out of your career, you can achieve it at IBM.\n \nWhether you're an undergraduate or post-graduate, we'll help you turn your years of study into tangible achievements through a vast array of global career opportunities and development programs.\n\nStart building the career you want at one of the most successful companies in history.\n\nJoin us. Let's build a Smarter Planet\n \nPlease apply directly on IBM\u2019s website at https://jobs3.netmedia1.com/cp/faces/job_search.\n\nHere are some of the positions currently available on the website:\nSoftware Developer Rational System Architect (4-8 Month Coop) - Kanata\nQA Software Developer Coop, Toronto 4/8 Months May 2013\nQRadar Demo Developer 4-8 Month Coop (Fredericton)\nSoftware Developer - 4-8 Month Coop (Markham)\nIBM Social Media Intern - May 4 month coop (Ottawa)\nIBM Rational Java/Eclipse Software Developer, 4 month Co-op Student 2013 (Markham)\nBusiness Process Management (BPM): Java / Web 2.0 Software Developer \u2013 16 month Internship (Markham)\nTo qualify for student opportunities, applicants must be enrolled at an accredited University or College pursuing a diploma or bachelor/post grad degree. Students must be returning to school after their work term placement to be qualified for a student position. We hire students for4, 8, 12 and 16 month work terms (depending on the type of student placement), which start in January, May, or September.",
-#  1,
-#  0)
-
-# cal = PlaceProSqlToJsonAdapter()
-# print cal.convert_sql_tuple_to_json(a, to_json=True)
+        return js_dict
