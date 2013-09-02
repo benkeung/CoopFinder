@@ -1,8 +1,7 @@
-
 What is this?
 =
 
-An automation project to help me find a coop job?
+An automation project to help me find a coop job.
 
 
 Why?
