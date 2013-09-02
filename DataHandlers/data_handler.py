@@ -11,7 +11,7 @@ class DataHandler(object):
 
     table_schemas_file_name = os.path.join(os.path.dirname(os.path.abspath(__file__)), "table_schemas.sql")
 
-    sql_statement_placepro = "INSERT INTO placepro VALUES(?,?,?,?,?,?,?,?,?)"
+    sql_statement_placepro = "INSERT or REPLACE INTO placepro VALUES(?,?,?,?,?,?,?,?,?)"
 
     def __init__(self):
         self.connection = sqlite3.connect(config.path_to_db)
@@ -55,6 +55,19 @@ class DataHandler(object):
             cursor = self.connection.cursor()
             cursor.executemany(self.sql_statement_placepro,placepro)
             self.connection.commit()
+
+    def set_in_calendar(self, placepro_id, in_calendar=1):
+        cursor = self.connection.cursor()
+        cursor.execute("UPDATE placepro SET in_calendar=? WHERE Id=?", (in_calendar, placepro_id))
+        self.connection.commit()
+
+    def is_in_calendar(self, placepro_id):
+        cursor = self.connection.cursor()
+        cursor.execute("SELECT in_calendar FROM placepro WHERE id = ?", (placepro_id,))
+        is_in_calendar = cursor.fetchone()[0]
+
+        # returns 0 or 1
+        return is_in_calendar
 
     def get_placepro_by_id(self, placepro_id):
         cursor = self.connection.cursor()
@@ -105,5 +118,4 @@ class DataHandler(object):
             cursor.executescript(table_schema)
 
         connection.commit()
-
-datahandler = DataHandler()
+ 

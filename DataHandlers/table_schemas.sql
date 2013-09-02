@@ -7,4 +7,4 @@ CREATE TABLE if not exists placepro(
     deadline TEXT,
     job_description TEXT,
     contains_keyword BOOLEAN,
-    in_calendar BOOLEAN)
+    in_calendar BOOLEAN NULL)

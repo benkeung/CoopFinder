@@ -1,12 +1,14 @@
 from DataHandlers import data_handler
 from DataRetriever import placepro
+from GoogleTools import gcal
+
 from selenium import webdriver
 
 import config
 
 def placepro_runner():
     # Appending an empty string because we want to also get all the jobs after
-    keywords = config.keywords + [""]
+    keywords = [""] + config.keywords
 
     browser = webdriver.Chrome()
 
@@ -28,4 +30,26 @@ def placepro_runner():
         datahandler.connection.close()
         placepro_browser.browser.close()
 
-placepro_runner()
+def placepro_data_runner():
+    # Init the three objects we really need
+    gcal2 = gcal.GoogleCalender()
+    adapter = gcal.PlaceProSqlToJsonAdapter()
+
+    try:
+        sql_handler = data_handler.DataHandler()
+        all_placepro_tuples = sql_handler.get_all_placepro()
+
+        for placepro_tuple in all_placepro_tuples:
+            placepro_id  = placepro_tuple[0]
+
+            if not sql_handler.is_in_calendar(placepro_id):
+                placepro_js = adapter.convert_sql_tuple_to_json(placepro_tuple, False)
+                print placepro_js
+
+                gcal2.create_event(placepro_js, config.placepro_coop_cal_id)
+                sql_handler.set_in_calendar(placepro_id, in_calendar=1)
+    finally:
+        sql_handler.close_connection()
+
+# placepro_runner()
+placepro_data_runner()

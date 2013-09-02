@@ -72,8 +72,8 @@ class PlaceProSqlToJsonAdapter(object):
     job_description_index = 6
     contains_keyword_index = 7
 
-    keyword_color = "5"
-    no_keyword_color = "12"
+    keyword_color = "10"
+    no_keyword_color = "5"
 
     def __init__(self):
         pass
@@ -134,6 +134,6 @@ class PlaceProSqlToJsonAdapter(object):
         # We can use the same for both start and end dates because they are going to be all day events
         # and have the same format
         date_dict = { "date" : event_date }
-        js_dict = OrderedDict([("start", date_dict), ("end", date_dict)])
+        js_dict = {"start": date_dict, "end": date_dict}
 
         return js_dict
