@@ -18,9 +18,9 @@ class DataHandler(object):
         self.__create_tables_if_not_already_exists()
 
     def insert_placepro_adapter(self, placepro, *args):
-        self.insert_place_pro(placepro)
+        self.insert_placepro(placepro)
 
-    def insert_place_pro(self, placepro):
+    def insert_placepro(self, placepro):
         """
         :param placepro: dictionary format of placepro information as defined in placepro.py
         """
@@ -37,7 +37,7 @@ class DataHandler(object):
         except sqlite3.IntegrityError:
             pass
 
-    def insert_many_place_pro(self, many_placepro):
+    def insert_many_placepro(self, many_placepro):
         """
         :param many_placepro: list of valid placepro dictionary or tuple
         """
@@ -56,6 +56,32 @@ class DataHandler(object):
             cursor.executemany(self.sql_statement_placepro,placepro)
             self.connection.commit()
 
+    def get_placepro_by_id(self, placepro_id):
+        cursor = self.connection.cursor()
+        cursor.execute("SELECT * FROM placepro WHERE id = ?", (placepro_id,))
+
+        return cursor.fetchall()
+
+    def get_placepro_by_keyword_flag(self, has_keyword):
+        if has_keyword:
+            has_keyword = 1
+        else:
+            has_keyword = 0
+
+        cursor = self.connection.cursor()
+        cursor.execute("SELECT * FROM placepro WHERE contains_keyword = ?", (has_keyword,))
+
+        return cursor.fetchall()
+
+    def get_all_placepro(self):
+        cursor = self.connection.cursor()
+        cursor.execute("SELECT * from placepro")
+
+        return cursor.fetchall()
+
+    def close_connection(self):
+        self.connection.close()
+
     def __convert_placepro_dict_to_tuple(self, placepro_dict):
         placepro_tuple = (
             placepro_dict["id"],
@@ -70,7 +96,6 @@ class DataHandler(object):
 
         return placepro_tuple
 
-
     def __create_tables_if_not_already_exists(self):
         connection = sqlite3.connect(config.path_to_db)
         cursor = connection.cursor()
@@ -81,7 +106,4 @@ class DataHandler(object):
 
         connection.commit()
 
-# For testing
-if __name__ == "__main__":
-    datahandler = DataHandler()
-    datahandler.create_tables_if_not_already_exists()
+datahandler = DataHandler()
