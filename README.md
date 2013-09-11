@@ -1,3 +1,8 @@
+The Calendar
+===
+The calendar can be found here:
+https://www.google.com/calendar/embed?src=gpidrb0c8un2b3brpqnvut5q7k%40group.calendar.google.com&ctz=America/Vancouver
+
 What is this?
 ===
 An automation project to help me find a coop job.
